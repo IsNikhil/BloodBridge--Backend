@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\usern\\OneDrive\\Desktop\\CMPS2850-F25-S1-G8\\Web\\LearningStarter\\LearningStarter.csproj": {}
+    "C:\\Users\\usern\\OneDrive\\Desktop\\BloodBridge--Backend\\LearningStarter.csproj": {}
   },
   "projects": {
-    "C:\\Users\\usern\\OneDrive\\Desktop\\CMPS2850-F25-S1-G8\\Web\\LearningStarter\\LearningStarter.csproj": {
+    "C:\\Users\\usern\\OneDrive\\Desktop\\BloodBridge--Backend\\LearningStarter.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\usern\\OneDrive\\Desktop\\CMPS2850-F25-S1-G8\\Web\\LearningStarter\\LearningStarter.csproj",
+        "projectUniqueName": "C:\\Users\\usern\\OneDrive\\Desktop\\BloodBridge--Backend\\LearningStarter.csproj",
         "projectName": "LearningStarter",
-        "projectPath": "C:\\Users\\usern\\OneDrive\\Desktop\\CMPS2850-F25-S1-G8\\Web\\LearningStarter\\LearningStarter.csproj",
+        "projectPath": "C:\\Users\\usern\\OneDrive\\Desktop\\BloodBridge--Backend\\LearningStarter.csproj",
         "packagesPath": "C:\\Users\\usern\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\usern\\OneDrive\\Desktop\\CMPS2850-F25-S1-G8\\Web\\LearningStarter\\obj\\",
+        "outputPath": "C:\\Users\\usern\\OneDrive\\Desktop\\BloodBridge--Backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\usern\\AppData\\Roaming\\NuGet\\NuGet.Config"
