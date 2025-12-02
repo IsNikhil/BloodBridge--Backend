@@ -29,21 +29,21 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // --- CORS FIX FOR RENDER + VERCEL ---
-       services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder
-            .WithOrigins(
-                "https://blood-bridge-frontend.vercel.app",
-                "http://localhost:3001"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+        // --- CORS FOR RENDER + VERCEL ---
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", builder =>
+            {
+                builder
+                    .WithOrigins(
+                        "https://blood-bridge-frontend.vercel.app",
+                        "http://localhost:3001"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
 
         services.AddControllers();
 
@@ -75,8 +75,7 @@ public class Startup
 
         services.AddMvc();
 
-        services
-            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
                 options.Events.OnRedirectToLogin = context =>
@@ -88,25 +87,22 @@ public class Startup
 
         services.AddAuthorization();
 
-        // Swagger
-services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "BloodBridge Backend",
-        Version = "v1",
-        Description = "Backend API for BloodBridge.",
-    });
+        // Swagger (Render-friendly)
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "BloodBridge Backend",
+                Version = "v1",
+                Description = "Backend API for BloodBridge."
+            });
 
-    // Remove unsupported TryGetMethodInfo — causes build failure
-    // c.CustomOperationIds(...);
-
-    c.MapType(typeof(IFormFile), () => new OpenApiSchema
-    {
-        Type = "file",
-        Format = "binary"
-    });
-});
+            c.MapType(typeof(IFormFile), () => new OpenApiSchema
+            {
+                Type = "file",
+                Format = "binary"
+            });
+        });
 
         services.AddHttpContextAccessor();
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -115,32 +111,36 @@ services.AddSwaggerGen(c =>
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataContext dataContext)
     {
-        // --- DO NOT DELETE OR CREATE DB ON RENDER ---
-        dataContext.Database.Migrate();
+        // ❌ DO NOT run migrations or create DB on Render
+        // dataContext.Database.Migrate();
+        // dataContext.Database.EnsureCreated();
+        // dataContext.Database.EnsureDeleted();
 
-      app.UseHsts();
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseSpaStaticFiles();
+        app.UseHsts();
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseSpaStaticFiles();
 
-app.UseRouting();
+        app.UseRouting();
 
-// Enable CORS for frontend
-app.UseCors("AllowOneFrontend");
+        // --- FIX: Use the correct CORs policy name ---
+        app.UseCors("AllowFrontend");
 
-app.UseAuthentication();
-app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.UseSwagger(options => { options.SerializeAsV2 = true; });
-app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "Learning Starter Server API V1"); });
+        app.UseSwagger(options => { options.SerializeAsV2 = true; });
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "BloodBridge API V1");
+        });
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
 
-
-        // Seed Data
+        // Seeding (runs safely without DB recreation)
         using var scope = app.ApplicationServices.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
