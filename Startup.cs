@@ -29,19 +29,20 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // --- CORS FOR RENDER + VERCEL ---
+        // --- 1. CORS FOR RENDER + VERCEL ---
         services.AddCors(options =>
         {
             options.AddPolicy("AllowFrontend", builder =>
             {
                 builder
                     .WithOrigins(
-                        "https://blood-bridge-frontend.vercel.app",
-                        "http://localhost:3001"
+                        "https://blood-bridge-frontend.vercel.app", // Your Vercel URL
+                        "http://localhost:3000", // Standard React Port
+                        "http://localhost:3001"  // Alternate Port
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials();
+                    .AllowCredentials(); // Essential for Cookies
             });
         });
 
@@ -59,6 +60,7 @@ public class Startup
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
         });
 
+        // --- 2. IDENTITY SETUP ---
         services.AddIdentity<User, Role>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
@@ -75,15 +77,22 @@ public class Startup
 
         services.AddMvc();
 
-        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+        // --- 3. FIX: COOKIE CONFIGURATION FOR CROSS-SITE (VERCEL -> RENDER) ---
+        // Since you use AddIdentity, we use ConfigureApplicationCookie instead of AddAuthentication
+        services.ConfigureApplicationCookie(options =>
+        {
+            // These two settings allow the cookie to travel from Vercel to Render
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            
+            // This prevents the backend from sending a "302 Redirect" on login failure, 
+            // sending a "401 Unauthorized" instead (better for React/Fetch)
+            options.Events.OnRedirectToLogin = context =>
             {
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = 401;
-                    return Task.CompletedTask;
-                };
-            });
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            };
+        });
 
         services.AddAuthorization();
 
@@ -111,10 +120,8 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataContext dataContext)
     {
-        // ❌ DO NOT run migrations or create DB on Render
+        // ❌ DO NOT run migrations or create DB on Render in code
         // dataContext.Database.Migrate();
-        // dataContext.Database.EnsureCreated();
-        // dataContext.Database.EnsureDeleted();
 
         app.UseHsts();
         app.UseHttpsRedirection();
@@ -123,7 +130,7 @@ public class Startup
 
         app.UseRouting();
 
-        // --- FIX: Use the correct CORs policy name ---
+        // --- 4. CORS MUST BE HERE ---
         app.UseCors("AllowFrontend");
 
         app.UseAuthentication();
@@ -140,7 +147,7 @@ public class Startup
             endpoints.MapControllers();
         });
 
-        // Seeding (runs safely without DB recreation)
+        // Seeding
         using var scope = app.ApplicationServices.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
