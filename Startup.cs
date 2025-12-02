@@ -118,29 +118,27 @@ services.AddSwaggerGen(c =>
         // --- DO NOT DELETE OR CREATE DB ON RENDER ---
         dataContext.Database.Migrate();
 
-        app.UseHsts();
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
+      app.UseHsts();
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseSpaStaticFiles();
 
-        app.UseRouting();
+app.UseRouting();
 
-        app.UseAuthentication();
-        app.UseAuthorization();
+// Enable CORS for frontend
+app.UseCors("AllowOneFrontend");
 
-        // --- Enable CORS for frontend ---
-        app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
-        // Swagger
-        app.UseSwagger(options => { options.SerializeAsV2 = true; });
-        app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "BloodBridge API V1");
-        });
+app.UseSwagger(options => { options.SerializeAsV2 = true; });
+app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "Learning Starter Server API V1"); });
 
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-        });
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+
 
         // Seed Data
         using var scope = app.ApplicationServices.CreateScope();
