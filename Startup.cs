@@ -89,17 +89,24 @@ public class Startup
         services.AddAuthorization();
 
         // Swagger
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "BloodBridge Backend",
-                Version = "v1",
-                Description = "Backend API for BloodBridge.",
-            });
-            c.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out var mi) ? mi.Name : null);
-            c.MapType(typeof(IFormFile), () => new OpenApiSchema { Type = "file", Format = "binary" });
-        });
+services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "BloodBridge Backend",
+        Version = "v1",
+        Description = "Backend API for BloodBridge.",
+    });
+
+    // Remove unsupported TryGetMethodInfo — causes build failure
+    // c.CustomOperationIds(...);
+
+    c.MapType(typeof(IFormFile), () => new OpenApiSchema
+    {
+        Type = "file",
+        Format = "binary"
+    });
+});
 
         services.AddHttpContextAccessor();
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
