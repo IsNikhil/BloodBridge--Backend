@@ -30,20 +30,20 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         // --- CORS FIX FOR RENDER + VERCEL ---
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowFrontend", builder =>
-            {
-                builder
-                    .WithOrigins(
-                        "https://bloodbridge-frontend.vercel.app",
-                        "https://bloodbridge-ccsx.onrender.com"
-                    )
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
-            });
-        });
+       services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder
+            .WithOrigins(
+                "https://blood-bridge-frontend.vercel.app",
+                "http://localhost:3001"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
         services.AddControllers();
 
