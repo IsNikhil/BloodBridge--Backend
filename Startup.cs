@@ -38,13 +38,13 @@ namespace LearningStarter
                 {
                     builder
                         .WithOrigins(
-                            "https://blood-bridge-frontend.vercel.app", // Your Vercel domain
+                            "https://blood-bridge-frontend.vercel.app",
                             "http://localhost:3000",
                             "http://localhost:3001"
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
-                        .AllowCredentials(); // Needed for Identity cookies
+                        .AllowCredentials();
                 });
             });
 
@@ -73,6 +73,7 @@ namespace LearningStarter
                 options.Password.RequireUppercase = false;
                 options.Password.RequireDigit = false;
                 options.Password.RequiredLength = 8;
+
                 options.ClaimsIdentity.UserIdClaimType = JwtClaimTypes.Subject;
                 options.ClaimsIdentity.UserNameClaimType = JwtClaimTypes.Name;
                 options.ClaimsIdentity.RoleClaimType = JwtClaimTypes.Role;
@@ -99,7 +100,7 @@ namespace LearningStarter
             services.AddAuthorization();
 
             // -----------------------------
-            // 4. Swagger
+            // Swagger
             // -----------------------------
             services.AddSwaggerGen(c =>
             {
@@ -131,9 +132,23 @@ namespace LearningStarter
             app.UseRouting();
 
             // -----------------------------
-            // 5. CORS MUST BE HERE
+            // 4. ENABLE CORS HERE
             // -----------------------------
             app.UseCors("AllowFrontend");
+
+            // -----------------------------
+            // 5. FIX AUTHENTICATED CORS PREFLIGHT (IMPORTANT)
+            // -----------------------------
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Method == "OPTIONS")
+                {
+                    context.Response.StatusCode = 200;
+                    return;
+                }
+
+                await next();
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -191,14 +206,10 @@ namespace LearningStarter
         private static async Task SeedRoles(DataContext dataContext, RoleManager<Role> roleManager)
         {
             if (!await roleManager.RoleExistsAsync("Admin"))
-            {
                 await roleManager.CreateAsync(new Role { Name = "Admin" });
-            }
 
             if (!await roleManager.RoleExistsAsync("User"))
-            {
                 await roleManager.CreateAsync(new Role { Name = "User" });
-            }
 
             await dataContext.SaveChangesAsync();
         }
@@ -224,10 +235,10 @@ namespace LearningStarter
             if (dataContext.BloodTypes.Any()) return;
 
             string[] types = { "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-" };
+
             foreach (var type in types)
-            {
                 dataContext.BloodTypes.Add(new BloodType { BloodTypeName = type });
-            }
+
             dataContext.SaveChanges();
         }
 
