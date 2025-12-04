@@ -29,9 +29,6 @@ namespace LearningStarter
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // -----------------------------
-            // 1. CORS FIX FOR RENDER + VERCEL
-            // -----------------------------
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", builder =>
@@ -40,7 +37,8 @@ namespace LearningStarter
                         .WithOrigins(
                             "https://blood-bridge-frontend.vercel.app",
                             "http://localhost:3000",
-                            "http://localhost:3001"
+                            "http://localhost:3001",
+                            "http://localhost:5173"
                         )
                         .AllowAnyHeader()
                         .AllowAnyMethod()
@@ -62,9 +60,6 @@ namespace LearningStarter
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            // -----------------------------
-            // 2. IDENTITY SETUP
-            // -----------------------------
             services.AddIdentity<User, Role>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false;
@@ -82,9 +77,6 @@ namespace LearningStarter
 
             services.AddMvc();
 
-            // -----------------------------
-            // 3. FIX FOR CROSS-SITE COOKIES (VERCEL → RENDER)
-            // -----------------------------
             services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.SameSite = SameSiteMode.None;
@@ -99,9 +91,6 @@ namespace LearningStarter
 
             services.AddAuthorization();
 
-            // -----------------------------
-            // Swagger
-            // -----------------------------
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
@@ -131,24 +120,10 @@ namespace LearningStarter
 
             app.UseRouting();
 
-            // -----------------------------
-            // 4. ENABLE CORS HERE
-            // -----------------------------
+            // CORS must be after UseRouting and before UseAuthentication
             app.UseCors("AllowFrontend");
 
-            // -----------------------------
-            // 5. FIX AUTHENTICATED CORS PREFLIGHT (IMPORTANT)
-            // -----------------------------
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Method == "OPTIONS")
-                {
-                    context.Response.StatusCode = 200;
-                    return;
-                }
-
-                await next();
-            });
+            // REMOVED the custom OPTIONS middleware - UseCors handles preflight automatically
 
             app.UseAuthentication();
             app.UseAuthorization();
@@ -164,9 +139,6 @@ namespace LearningStarter
                 endpoints.MapControllers();
             });
 
-            // -----------------------------
-            // 6. Seeding
-            // -----------------------------
             using var scope = app.ApplicationServices.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
@@ -177,8 +149,6 @@ namespace LearningStarter
             SeedBloodTypes(dataContext);
             SeedBloodInventory(dataContext);
         }
-
-        // -------------------- Seeding --------------------
 
         private static async Task SeedUsers(DataContext dataContext, UserManager<User> userManager)
         {
